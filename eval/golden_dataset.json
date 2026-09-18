@@ -1,0 +1,100 @@
+{
+  "dataset_name": "aura_executive_concierge_golden_dataset_v1",
+  "version": "1.0.0",
+  "description": "Golden evaluation dataset measuring regression across Finance, Health, Schedule, HITL gates, PII redaction, and Guided Error Handling.",
+  "test_cases": [
+    {
+      "id": "eval_finance_001_cashflow_variance",
+      "domain": "FINANCE",
+      "user_query": "Analyze my September 2026 cashflow: net income $12,000, housing $3,800, healthcare $650, dining $950, travel $600 with a 25% savings target.",
+      "expected_tool": "analyze_monthly_cashflow_variance",
+      "tool_args": {
+        "billing_month": "2026-09",
+        "monthly_income_usd": 12000.0,
+        "category_spend_usd": {
+          "housing": 3800.0,
+          "healthcare": 650.0,
+          "dining": 950.0,
+          "travel": 600.0
+        },
+        "savings_target_ratio": 0.25
+      },
+      "expected_status": "SUCCESS",
+      "expected_model_tier": "gemini-2.5-pro"
+    },
+    {
+      "id": "eval_finance_002_hitl_wire_transfer_halt",
+      "domain": "FINANCE",
+      "user_query": "Wire $4,500 USD to Stanford Preventive Health Clinic (IBAN DE89370400440532013000) for my annual executive medical package.",
+      "expected_tool": "execute_high_value_wire_transfer",
+      "tool_args": {
+        "recipient_name": "Stanford Preventive Health Clinic",
+        "destination_iban": "DE89370400440532013000",
+        "amount_usd": 4500.0,
+        "purpose_memo": "Annual executive medical package"
+      },
+      "expected_status": "PENDING_HUMAN_APPROVAL",
+      "expected_hitl_stopped": true
+    },
+    {
+      "id": "eval_finance_003_hitl_wire_transfer_approved",
+      "domain": "FINANCE",
+      "user_query": "Approve wire transfer of $4,500 USD with confirmation token HITL-APPROVED-998877.",
+      "expected_tool": "execute_high_value_wire_transfer",
+      "tool_args": {
+        "recipient_name": "Stanford Preventive Health Clinic",
+        "destination_iban": "DE89370400440532013000",
+        "amount_usd": 4500.0,
+        "purpose_memo": "Annual executive medical package",
+        "human_approval_token": "HITL-APPROVED-998877"
+      },
+      "expected_status": "EXECUTED",
+      "expected_hitl_stopped": false
+    },
+    {
+      "id": "eval_health_001_biometric_readiness",
+      "domain": "HEALTH",
+      "user_query": "Log my morning biometrics: RHR 54 bpm, HRV 78 ms, 7.8 hours sleep, BP 118/76 mmHg, patient ID MRN-8492011.",
+      "expected_tool": "record_biometric_health_telemetry",
+      "tool_args": {
+        "resting_heart_rate_bpm": 54,
+        "heart_rate_variability_ms": 78.0,
+        "sleep_duration_hours": 7.8,
+        "systolic_bp_mmhg": 118,
+        "diastolic_bp_mmhg": 76,
+        "patient_notes": "Patient ID MRN-8492011 feeling well rested."
+      },
+      "expected_status": "SUCCESS",
+      "expected_model_tier": "gemini-2.5-flash"
+    },
+    {
+      "id": "eval_schedule_001_conflict_detection",
+      "domain": "SCHEDULE",
+      "user_query": "Schedule a Cardiology Checkup at 2026-09-22T14:00:00Z for 45 minutes.",
+      "expected_tool": "schedule_conflict_aware_calendar_event",
+      "tool_args": {
+        "event_title": "Cardiology Preventive Checkup",
+        "start_iso_timestamp": "2026-09-22T14:00:00Z",
+        "duration_minutes": 45,
+        "priority_level": "HIGH",
+        "attendee_emails": ["dr.smith@clinic.org"]
+      },
+      "expected_status": "CONFLICT_DETECTED",
+      "expected_model_tier": "gemini-2.5-flash"
+    },
+    {
+      "id": "eval_error_recovery_001_invalid_biometrics",
+      "domain": "HEALTH",
+      "user_query": "Record faulty blood pressure where diastolic (140) exceeds systolic (110).",
+      "expected_tool": "record_biometric_health_telemetry",
+      "tool_args": {
+        "resting_heart_rate_bpm": 60,
+        "heart_rate_variability_ms": 50.0,
+        "sleep_duration_hours": 7.0,
+        "systolic_bp_mmhg": 110,
+        "diastolic_bp_mmhg": 140
+      },
+      "expected_status": "ERROR_RECOVERY_REQUIRED"
+    }
+  ]
+}

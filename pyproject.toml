@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aura-concierge-agent"
+version = "1.0.0"
+description = "Aura: Executive Personal Concierge Multi-Agent System built with Google ADK (Finance, Health & Wellness, and Schedule Management)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [
+    { name = "Boqi Gao", email = "gaoboqi@gmail.com" }
+]
+dependencies = [
+    "google-adk>=1.0.0",
+    "google-genai>=1.0.0",
+    "pydantic>=2.6.0",
+    "google-cloud-secret-manager>=2.20.0",
+    "google-cloud-dlp>=3.16.0",
+    "google-cloud-aiplatform>=1.60.0",
+    "opentelemetry-api>=1.25.0",
+    "opentelemetry-sdk>=1.25.0",
+    "python-json-logger>=2.0.7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.4.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "eval"]
+asyncio_mode = "auto"
