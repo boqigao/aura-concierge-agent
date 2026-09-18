@@ -28,7 +28,10 @@ from aura_concierge.guardrails.policy_plugins import (
     enforce_output_self_eval_and_policy_guardrail,
 )
 from aura_concierge.memory.compaction import ContextCompactionManager
-from aura_concierge.memory.session_store import get_persistent_memory_store
+from aura_concierge.memory.session_store import (
+    create_vertex_memory_bank_service,
+    get_persistent_memory_store,
+)
 from aura_concierge.observability.structured_logger import capture_intent_and_outcome
 from aura_concierge.observability.tracing import traced_tool
 from aura_concierge.tools.finance_tools import (
@@ -47,6 +50,7 @@ from aura_concierge.tools.schedule_tools import (
 
 try:
     from google.adk.agents import Agent, ParallelAgent, SequentialAgent
+    from google.adk.tools import load_memory, preload_memory
 except ImportError:  # pragma: no cover - lightweight shim when inspected outside ADK runtime
 
     class Agent:  # type: ignore[no-redef]
@@ -59,6 +63,9 @@ except ImportError:  # pragma: no cover - lightweight shim when inspected outsid
 
     class SequentialAgent(Agent):  # type: ignore[no-redef]
         pass
+
+    load_memory = None
+    preload_memory = None
 
 
 # ============================================================================
@@ -285,27 +292,35 @@ morning_executive_briefing_pipeline = SequentialAgent(
 
 
 # ============================================================================
-# Root Coordinator Agent (`root_agent`)
+# Root Coordinator Agent (`root_agent`) with ADK Memory Bank & Sub-Agents
 # ============================================================================
+
+default_memory_bank_service = create_vertex_memory_bank_service()
+
+_COORDINATOR_TOOLS: List[Any] = [
+    retrieve_cross_session_concierge_memory,
+    analyze_monthly_cashflow_variance,
+    execute_high_value_wire_transfer,
+    optimize_tax_advantaged_portfolio,
+    record_biometric_health_telemetry,
+    generate_personalized_nutrition_protocol,
+    schedule_conflict_aware_calendar_event,
+    allocate_deep_work_focus_blocks,
+]
+if load_memory is not None:
+    _COORDINATOR_TOOLS.append(load_memory)
+if preload_memory is not None:
+    _COORDINATOR_TOOLS.append(preload_memory)
 
 executive_concierge_coordinator = Agent(
     name="executive_concierge_coordinator",
     model=StrategicModelRouter.select_model("CROSS_DOMAIN_PLANNING", complexity_score=0.95),
     description=(
         "Aura Root Executive Concierge Coordinator (`gemini-2.5-pro`). Orchestrates Finance, "
-        "Health & Wellness, Schedule sub-agents, and the Morning Executive Briefing Sequential/Parallel pipeline."
+        "Health & Wellness, Schedule sub-agents, Vertex AI Memory Bank, and the Morning Executive Briefing pipeline."
     ),
     instruction=AURA_EXECUTIVE_CONSTITUTION_PROMPT,
-    tools=[
-        retrieve_cross_session_concierge_memory,
-        analyze_monthly_cashflow_variance,
-        execute_high_value_wire_transfer,
-        optimize_tax_advantaged_portfolio,
-        record_biometric_health_telemetry,
-        generate_personalized_nutrition_protocol,
-        schedule_conflict_aware_calendar_event,
-        allocate_deep_work_focus_blocks,
-    ],
+    tools=_COORDINATOR_TOOLS,
     sub_agents=[
         morning_executive_briefing_pipeline,
     ],

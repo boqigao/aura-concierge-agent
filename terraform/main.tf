@@ -123,3 +123,27 @@ resource "google_cloud_run_v2_service" "aura_concierge_service" {
     }
   }
 }
+
+# 6. Google Cloud Discovery Engine Data Store for Long-Term Semantic Memory
+resource "google_discovery_engine_data_store" "aura_memory_datastore" {
+  location                    = "global"
+  data_store_id               = "aura-concierge-memory-store"
+  display_name                = "Aura Executive Concierge Semantic Memory Store"
+  industry_vertical           = "GENERIC"
+  content_config              = "NO_CONTENT"
+  solution_types              = ["SOLUTION_TYPE_SEARCH"]
+  create_advanced_site_search = false
+}
+
+# 7. Gemini Enterprise App (Discovery Engine Intranet Search & Agent Assistant Engine)
+resource "google_discovery_engine_search_engine" "aura_gemini_enterprise_app" {
+  engine_id      = "aura-concierge-enterprise-app"
+  collection_id  = "default_collection"
+  location       = google_discovery_engine_data_store.aura_memory_datastore.location
+  display_name   = "Aura Executive Concierge Gemini Enterprise App"
+  data_store_ids = [google_discovery_engine_data_store.aura_memory_datastore.data_store_id]
+  search_engine_config {
+    search_tier   = "SEARCH_TIER_ENTERPRISE"
+    search_add_ons = ["SEARCH_ADD_ON_LLM"]
+  }
+}
